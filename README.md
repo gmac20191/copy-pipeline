@@ -1,10 +1,14 @@
 # `@gmac20191/copy-pipeline`
 
+[![CI](https://github.com/gmac20191/copy-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/gmac20191/copy-pipeline/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/gmac20191/copy-pipeline?sort=semver)](https://github.com/gmac20191/copy-pipeline/releases)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
+
 Brief → multi-model variants → graded → operator pick → shipped. Plus claim verification: every tagged assertion in published copy resolves to a verified source.
 
 ## Status
 
-**0.2.0-alpha** — Three sets of capabilities are wired end-to-end:
+**Alpha** — three sets of capabilities are wired end-to-end:
 
 1. **Generation + grading** — brief in, multi-model variants out, brand-canonical + LLM-judge graders run on each.
 2. **Grounding** — pgvector + provider-agnostic embeddings (ADR `docs/adr/0001-grounding-stack.md`). Markdown ingester live; Langfuse tracing live.
@@ -92,13 +96,15 @@ The eleven load-bearing decisions:
 
 ## Install
 
-Not published to npm. Install from git:
+Not published to npm. Install from git (pin a release tag):
 
 ```bash
-npm install git+ssh://git@github.com/gmac20191/copy-pipeline.git
+npm install github:gmac20191/copy-pipeline#v0.1.0
 # or
-pnpm add git+ssh://git@github.com/gmac20191/copy-pipeline.git
+pnpm add github:gmac20191/copy-pipeline#v0.1.0
 ```
+
+Release tags are listed on the [releases page](https://github.com/gmac20191/copy-pipeline/releases).
 
 Then declare your project's brand-kit at `docs/brand/brand-kit.json`. Schema in `src/brand-kit.ts`.
 
@@ -247,6 +253,10 @@ In each consuming project:
 - `docs/brand/brand-kit.json` — the brand-kit the pipeline consumes
 - `docs/brand/CANONICAL.md` — the canonical voice / audience spec the brand-kit references
 - Project-specific Verifier plugins (e.g. `packages/copy-pipeline-plugins/` in a yarn monorepo) registered at consumer startup
+
+## Contributing & versioning
+
+Contributions welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md). Short version: GitHub Flow (topic branches → squash-merged PRs into `main` with conventional-commit titles), and versioning is fully automated — on every push to `main`, semantic-release derives the next semver from the commit types, tags it, and publishes a GitHub Release with generated notes.
 
 ## License
 

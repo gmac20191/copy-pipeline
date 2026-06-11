@@ -1,5 +1,10 @@
 # Changelog
 
+> **Frozen at 0.1.0.** From v0.1.0 onward, releases are automated with
+> semantic-release and release notes live on the
+> [GitHub releases page](https://github.com/gmac20191/copy-pipeline/releases).
+> This file is the hand-written pre-release (alpha) history.
+
 Architectural references point at the ADR in the originating consuming
 project's repo (`docs/decisions/<date>-copy-pipeline-architecture.md`).
 This file just tracks shipped-state evolution; rationale lives in the ADR.

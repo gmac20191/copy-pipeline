@@ -1,28 +1,13 @@
 import { execSync } from 'child_process'
 
+// Tag + GitHub Release only — no commit-back to main. The version source of
+// truth is the git tag; release notes live on the Releases page. (A
+// commit-back plugin would need a bypass on the protected main branch, which
+// GitHub doesn't grant to the Actions app on personal repos.)
 const pluginsCI = [
   '@semantic-release/commit-analyzer',
   '@semantic-release/release-notes-generator',
-  [
-    '@semantic-release/changelog',
-    {
-      changelogFile: 'CHANGELOG.md',
-    },
-  ],
-  [
-    '@semantic-release/npm',
-    {
-      npmPublish: false,
-    },
-  ],
-  [
-    '@semantic-release/git',
-    {
-      assets: ['package.json', 'CHANGELOG.md'],
-      message:
-        'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
-    },
-  ],
+  '@semantic-release/github',
 ]
 
 function getLocalRunConfig() {
@@ -35,7 +20,7 @@ function getLocalRunConfig() {
 
 function getCIConfig() {
   return {
-    branches: ['main', 'next'],
+    branches: ['main'],
     plugins: pluginsCI,
   }
 }

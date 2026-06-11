@@ -1,0 +1,32 @@
+name: Bug report
+description: Something broke or behaves unexpectedly
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Smallest command / brand-kit / input that reproduces it. CLI output (with `--json` if relevant) helps a lot.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: copy-pipeline version or commit SHA, plus node version
+      placeholder: "copy-pipeline v0.1.0, node 22.x"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Environment context
+      description: Which optional components were active (provider keys, pgvector, Langfuse, NotebookLM, plugins)? Each degrades gracefully when missing, so this shapes the diagnosis.

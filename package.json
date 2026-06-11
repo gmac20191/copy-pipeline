@@ -1,6 +1,6 @@
 {
   "name": "@gmac20191/copy-pipeline",
-  "version": "0.1.0-alpha.7",
+  "version": "0.1.0",
   "description": "Brief → multi-model variants → graded → operator pick. Brand-kit-grounded copy generation pipeline. Pluggable Grader / GroundingSource / DestinationAdapter interfaces; consuming projects declare a brand-kit (docs/brand/brand-kit.json) and the pipeline grounds generation against it.",
   "type": "module",
   "main": "./dist/src/index.js",
