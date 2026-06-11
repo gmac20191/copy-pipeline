@@ -1,0 +1,105 @@
+{
+  "name": "@gmac20191/copy-pipeline",
+  "version": "0.1.0-alpha.7",
+  "description": "Brief → multi-model variants → graded → operator pick. Brand-kit-grounded copy generation pipeline. Pluggable Grader / GroundingSource / DestinationAdapter interfaces; consuming projects declare a brand-kit (docs/brand/brand-kit.json) and the pipeline grounds generation against it.",
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "bin": {
+    "copy-pipeline": "./dist/bin/copy-pipeline.js",
+    "copy-pipeline-mcp": "./dist/bin/copy-pipeline-mcp.js",
+    "copy-pipeline-watch": "./dist/bin/copy-pipeline-watch.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./brand-kit": {
+      "import": "./dist/src/brand-kit.js",
+      "types": "./dist/src/brand-kit.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
+    "prepack": "npm run build",
+    "dev": "tsx watch bin/copy-pipeline.ts",
+    "cli": "tsx bin/copy-pipeline.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "release": "semantic-release",
+    "coverage": "vitest run --coverage",
+    "prepare": "husky",
+    "test:watch": "vitest",
+    "stack:up": "docker compose up -d",
+    "stack:down": "docker compose down",
+    "stack:logs": "docker compose logs -f"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.0.0",
+    "@ai-sdk/google": "^1.0.0",
+    "@ai-sdk/google-vertex": "2.2.27",
+    "@ai-sdk/openai": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "ai": "^4.0.0",
+    "commander": "^12.0.0",
+    "fast-glob": "^3.3.3",
+    "googleapis": "^172.0.0",
+    "gray-matter": "^4.0.3",
+    "langfuse": "^3.0.0",
+    "openai": "^4.0.0",
+    "pg": "^8.11.0",
+    "pgvector": "^0.2.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@commitlint/types": "^19.8.1",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/npm": "^12.0.2",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "@vitest/coverage-v8": "^2.0.0",
+    "eslint": "^9.31.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.2",
+    "prettier": "^3.6.2",
+    "semantic-release": "^24.2.7",
+    "tsx": "^4.0.0",
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.38.0",
+    "vitest": "^2.0.0"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write",
+      "vitest related --run"
+    ]
+  },
+  "author": "umsurething",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gmac20191/copy-pipeline.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gmac20191/copy-pipeline/issues"
+  },
+  "homepage": "https://github.com/gmac20191/copy-pipeline#readme"
+}

@@ -1,0 +1,211 @@
+# copy-pipeline local dev stack
+#
+# `npm run stack:up` brings everything below up in the background.
+# `npm run stack:down` tears it down preserving volumes.
+# `docker compose down -v` nukes data too.
+#
+# Services:
+#   pgvector              — Postgres 16 with the `vector` extension. Grounding
+#                           corpora live here as `chunks_<corpus>` tables
+#                           (one per corpus per ADR 0001).
+#   langfuse-web          — Langfuse v3 server (HITL surface). Reachable at
+#                           http://localhost:3104.
+#   langfuse-worker       — Langfuse v3 worker for async event ingestion.
+#   langfuse-postgres     — Langfuse's app database (separate from pgvector).
+#   langfuse-clickhouse   — Langfuse's analytics store.
+#   langfuse-redis        — Langfuse's queue.
+#   langfuse-minio        — Langfuse's object store for media + batch exports.
+#
+# Bundled Langfuse on first boot auto-provisions:
+#   org/project: copy-pipeline
+#   public key:  pk-lf-copy-pipeline-dev
+#   secret key:  sk-lf-copy-pipeline-dev
+#   user:        admin@copy-pipeline.local / admin1234
+#
+# Point copy-pipeline at it by exporting:
+#   LANGFUSE_PUBLIC_KEY=pk-lf-copy-pipeline-dev
+#   LANGFUSE_SECRET_KEY=sk-lf-copy-pipeline-dev
+#   LANGFUSE_BASE_URL=http://localhost:3104
+#
+# The Langfuse defaults below are intentionally insecure — local dev only.
+# Do not re-use them in any other environment.
+
+services:
+  pgvector:
+    image: pgvector/pgvector:pg16
+    container_name: copy_pipeline_pgvector
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: copy_pipeline
+      POSTGRES_PASSWORD: copy_pipeline
+      POSTGRES_DB: copy_pipeline
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+      - ./docker/pgvector-init.sql:/docker-entrypoint-initdb.d/00-extension.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U copy_pipeline -d copy_pipeline"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  # ── Langfuse stack ────────────────────────────────────────────────────────
+  # Vendored from langfuse/langfuse main docker-compose.yml on 2026-05-21.
+  # Modifications:
+  #   - Renamed services to langfuse-* to avoid colliding with the pgvector
+  #     service name and to keep `docker compose` output legible.
+  #   - Removed host port mappings for langfuse-postgres, langfuse-clickhouse,
+  #     langfuse-redis (no host conflict; not needed for local dev).
+  #   - Added LANGFUSE_INIT_* env so first boot auto-provisions org / project
+  #     / user / API keys. No clicking through the onboarding flow.
+  #   - Renamed langfuse_postgres_data → langfuse_postgres_data (kept) so
+  #     volumes don't collide with our pgvector_data volume.
+
+  langfuse-worker:
+    image: docker.io/langfuse/langfuse-worker:3
+    restart: always
+    depends_on: &langfuse-depends-on
+      langfuse-postgres:
+        condition: service_healthy
+      langfuse-minio:
+        condition: service_healthy
+      langfuse-redis:
+        condition: service_healthy
+      langfuse-clickhouse:
+        condition: service_healthy
+    environment: &langfuse-worker-env
+      NEXTAUTH_URL: http://localhost:3104
+      DATABASE_URL: postgresql://langfuse:langfuse@langfuse-postgres:5432/langfuse
+      SALT: copy-pipeline-langfuse-dev-salt
+      ENCRYPTION_KEY: "bdadd46a84e00a79eabe308b05e9cafa059bd7fd44b687ff821ed770b920a970"
+      TELEMETRY_ENABLED: "false"
+      LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES: "false"
+      CLICKHOUSE_MIGRATION_URL: clickhouse://langfuse-clickhouse:9000
+      CLICKHOUSE_URL: http://langfuse-clickhouse:8123
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+      CLICKHOUSE_CLUSTER_ENABLED: "false"
+      LANGFUSE_USE_AZURE_BLOB: "false"
+      LANGFUSE_USE_OCI_NATIVE_OBJECT_STORAGE: "false"
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: auto
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: minio
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: miniosecret
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://langfuse-minio:9000
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+      LANGFUSE_S3_EVENT_UPLOAD_PREFIX: events/
+      LANGFUSE_S3_MEDIA_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_MEDIA_UPLOAD_REGION: auto
+      LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: minio
+      LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: miniosecret
+      LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: http://localhost:9090
+      LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: "true"
+      LANGFUSE_S3_MEDIA_UPLOAD_PREFIX: media/
+      LANGFUSE_S3_BATCH_EXPORT_ENABLED: "false"
+      REDIS_HOST: langfuse-redis
+      REDIS_PORT: 6379
+      REDIS_AUTH: copy-pipeline-langfuse-dev-redis
+      REDIS_TLS_ENABLED: "false"
+
+  langfuse-web:
+    image: docker.io/langfuse/langfuse:3
+    restart: always
+    depends_on: *langfuse-depends-on
+    ports:
+      - "3104:3000"
+    environment:
+      <<: *langfuse-worker-env
+      NEXTAUTH_SECRET: copy-pipeline-langfuse-dev-nextauth-secret
+      LANGFUSE_INIT_ORG_ID: copy-pipeline
+      LANGFUSE_INIT_ORG_NAME: copy-pipeline
+      LANGFUSE_INIT_PROJECT_ID: copy-pipeline
+      LANGFUSE_INIT_PROJECT_NAME: copy-pipeline
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: pk-lf-copy-pipeline-dev
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: sk-lf-copy-pipeline-dev
+      LANGFUSE_INIT_USER_EMAIL: admin@copy-pipeline.local
+      LANGFUSE_INIT_USER_NAME: admin
+      LANGFUSE_INIT_USER_PASSWORD: admin1234
+
+  langfuse-clickhouse:
+    image: docker.io/clickhouse/clickhouse-server
+    restart: always
+    user: "101:101"
+    environment:
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+    volumes:
+      - langfuse_clickhouse_data:/var/lib/clickhouse
+      - langfuse_clickhouse_logs:/var/log/clickhouse-server
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 1s
+
+  langfuse-minio:
+    image: cgr.dev/chainguard/minio
+    restart: always
+    entrypoint: sh
+    command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: miniosecret
+    ports:
+      - "9090:9000"
+      - "127.0.0.1:9091:9001"
+    volumes:
+      - langfuse_minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 1s
+      timeout: 5s
+      retries: 5
+      start_period: 1s
+
+  langfuse-redis:
+    image: docker.io/redis:7
+    restart: always
+    command: >
+      --requirepass copy-pipeline-langfuse-dev-redis
+      --maxmemory-policy noeviction
+    volumes:
+      - langfuse_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 10s
+      retries: 10
+
+  langfuse-postgres:
+    image: docker.io/postgres:17
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: langfuse
+      POSTGRES_DB: langfuse
+      TZ: UTC
+      PGTZ: UTC
+    volumes:
+      - langfuse_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  pgvector_data:
+    driver: local
+  langfuse_postgres_data:
+    driver: local
+  langfuse_clickhouse_data:
+    driver: local
+  langfuse_clickhouse_logs:
+    driver: local
+  langfuse_minio_data:
+    driver: local
+  langfuse_redis_data:
+    driver: local

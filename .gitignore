@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.vscode/
+.idea/
+coverage/
+
+# local-only working notes + planning material — never commit
+/docs/ai-experiment-writeup.md
+/docs/roi-metrics.md
+/scripts/run-demo.sh
+/pipelinepg-*.png
+/PITCH.md
+/VISION.md
+
+# local overrides with real folder/queue ids
+*.local.json

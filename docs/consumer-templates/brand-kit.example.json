@@ -1,0 +1,52 @@
+{
+  "name": "consumer-name",
+  "version": "0.1.0",
+  "description": "Brand-kit for <consumer name> — drives copy-pipeline generation + verification.",
+  "canonicals": {
+    "marketing": {
+      "spec": "docs/brand/CANONICAL.md",
+      "rules": "docs/brand/rules.json"
+    }
+  },
+  "corpora": {
+    "voice": {
+      "backend": "pgvector",
+      "index_name": "consumer_voice",
+      "description": "Exemplar voice samples for retrieval-grounded generation.",
+      "source_glob": "docs/voice/**/*.md",
+      "status": "active"
+    }
+  },
+  "models": {
+    "candidates": [
+      "anthropic/claude-3-5-sonnet-latest",
+      "google/gemini-1.5-pro",
+      "openai/gpt-4o"
+    ],
+    "grader": "anthropic/claude-3-5-sonnet-latest",
+    "embedder": "openai/text-embedding-3-small"
+  },
+  "destinations": {
+    "entries": {
+      "scratch": {
+        "adapter": "output-file",
+        "config": { "path": "/tmp/copy-pipeline-out.md" },
+        "description": "Local scratch file for the operator pick + review loop."
+      }
+    }
+  },
+  "verifiers": {
+    "description": "Consumer-side plugin discovery + builtin opt-ins. See docs/CONSUMER-ONBOARDING.md.",
+    "plugins": [
+      "@consumer/copy-pipeline-plugins"
+    ],
+    "builtins": {
+      "notebooklm": false,
+      "notebooklm_notebook_id": ""
+    }
+  },
+  "language": {
+    "spelling": "en-US",
+    "exceptions": []
+  }
+}

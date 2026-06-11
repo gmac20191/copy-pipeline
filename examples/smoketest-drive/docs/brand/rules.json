@@ -1,0 +1,45 @@
+{
+  "schema_version": "0.1.0",
+  "canonical_path": "docs/brand/CANONICAL.md",
+  "canonical_last_updated": "2026-05-26",
+  "notes": "Generic prose-lint rules for the copy-pipeline-watch smoke test. Designed to fire on the typical 'noisy first draft' shape (filler words, vague nouns, uncertain marketing voice) so we can see brand-review bite + the rewritten variant clean up. Not a real brand voice — a wiring test only.",
+
+  "rule_groups": {
+    "filler_words": {
+      "severity": "warning",
+      "canonical_section": "Drafting hygiene",
+      "rationale": "Filler words signal first-draft prose. They add no information. Remove before publish.",
+      "items": [
+        { "id": "FL-001", "pattern": "\\bbasically\\b", "regex": true },
+        { "id": "FL-002", "pattern": "\\bkinda\\b", "regex": true },
+        { "id": "FL-003", "pattern": "\\bsorta\\b", "regex": true },
+        { "id": "FL-004", "pattern": "\\band like,?\\b", "regex": true },
+        { "id": "FL-005", "pattern": "\\byou know\\b", "regex": true },
+        { "id": "FL-006", "pattern": "\\bI guess\\b", "regex": true },
+        { "id": "FL-007", "pattern": "\\bsomehow\\b", "regex": true }
+      ]
+    },
+
+    "vague_nouns": {
+      "severity": "warning",
+      "canonical_section": "Drafting hygiene",
+      "rationale": "Vague nouns hide what's actually being described. Replace with the specific thing.",
+      "items": [
+        { "id": "VN-001", "pattern": "\\bstuff\\b", "regex": true },
+        { "id": "VN-002", "pattern": "\\bthings\\b", "regex": true },
+        { "id": "VN-003", "pattern": "\\bsome (sort|kind) of\\b", "regex": true }
+      ]
+    },
+
+    "empty_marketing": {
+      "severity": "warning",
+      "canonical_section": "Drafting hygiene",
+      "rationale": "Empty value-claims that don't actually claim anything. Cut.",
+      "items": [
+        { "id": "EM-001", "pattern": "\\bit'?s pretty cool\\b", "regex": true },
+        { "id": "EM-002", "pattern": "\\bthe whole idea is\\b", "regex": true },
+        { "id": "EM-003", "pattern": "\\bgame[- ]chang(er|ing)\\b", "regex": true }
+      ]
+    }
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "name": "smoketest-drive",
+  "version": "0.1.0",
+  "description": "Minimal brand-kit fixture for the copy-pipeline-watch end-to-end smoke test. Wires a Google Drive watch folder → google-drive Destination round-trip with no RAG and one Gemini Flash candidate.",
+  "canonicals": {
+    "marketing": {
+      "spec": "docs/brand/CANONICAL.md",
+      "rules": "rules.json",
+      "description": "Smoke-test canonical. In a real consumer this points at a written brand voice spec. The rules file is generic prose-lint to prove brand-review bites."
+    }
+  },
+  "corpora": {},
+  "langfuse": {
+    "annotation_queue_id": "<langfuse-annotation-queue-id>"
+  },
+  "models": {
+    "description": "Single candidate via Vertex Model Garden — Gemini Flash. Single GCP auth path, no vendor keys. Add anthropic-vertex/claude-* candidates once Vertex Model Garden activation is approved (one-time accept-Anthropic-ToS step per project).",
+    "candidates": ["google-vertex/gemini-2.5-flash"],
+    "grader": "google-vertex/gemini-2.5-flash"
+  },
+  "destinations": {
+    "description": "Drive folders the daemon writes back into.",
+    "entries": {
+      "drive-reviewed": {
+        "adapter": "google-drive",
+        "description": "Picked variants land here for the content team to review.",
+        "config": {
+          "destination_folder_id": "<drive-folder-id-reviewed>",
+          "auth": {
+            "service_account_key_path": "~/.config/copy-pipeline/copy-pipeline-watch-sa.json"
+          },
+          "format": "google_doc",
+          "filename": "{{source_name}} — variant {{variant_index}} ({{variant_model}}, score {{score}}) — {{timestamp}}"
+        }
+      },
+      "drive-needs-attention": {
+        "adapter": "google-drive",
+        "description": "Generate failures + total publish failures land here with an error marker.",
+        "config": {
+          "destination_folder_id": "<drive-folder-id-needs-attention>",
+          "auth": {
+            "service_account_key_path": "~/.config/copy-pipeline/copy-pipeline-watch-sa.json"
+          },
+          "format": "markdown",
+          "filename": "NEEDS-ATTENTION — {{source_name}} — {{timestamp}}.md"
+        }
+      },
+      "drive-suggestions": {
+        "adapter": "google-drive",
+        "description": "Proposer agent writes evidence-backed brand-kit improvement proposals here. The operator reviews + approves/rejects.",
+        "config": {
+          "destination_folder_id": "<drive-folder-id-suggestions>",
+          "auth": {
+            "service_account_key_path": "~/.config/copy-pipeline/copy-pipeline-watch-sa.json"
+          },
+          "format": "markdown",
+          "filename": "proposals — {{timestamp}}.md"
+        }
+      }
+    }
+  },
+  "input_sources": {
+    "description": "Drive watch folder — drop a doc here and the daemon will fire.",
+    "entries": {
+      "drive-watch": {
+        "adapter": "google-drive",
+        "reviewed_destination": "drive-reviewed",
+        "needs_attention_destination": "drive-needs-attention",
+        "config": {
+          "watch_folder_id": "<drive-folder-id-watch>",
+          "auth": {
+            "service_account_key_path": "~/.config/copy-pipeline/copy-pipeline-watch-sa.json"
+          },
+          "poll_interval_seconds": 15,
+          "brief_template": "Apply the brand canonical to the following document. Improve clarity and voice without changing intent. Preserve structure unless a section is clearly broken.",
+          "state_path": "~/.config/copy-pipeline/smoketest-drive.state.json"
+        }
+      }
+    }
+  }
+}
